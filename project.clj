@@ -4,8 +4,10 @@
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url  "https://www.eclipse.org/legal/epl-2.0/"}
 
+  :repositories [["jitpack" "https://jitpack.io"]]          ; HACK to avoid releasing half-baked deps
   :dependencies [[org.clojure/clojure "1.10.0"]
-                 [org.clojure/clojurescript "1.10.520"]]
+                 [org.clojure/clojurescript "1.10.520"]
+                 [com.github.nilern/mistletoe "master-SNAPSHOT"]]
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-npm "0.6.2"]]
 
