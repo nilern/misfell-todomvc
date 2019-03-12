@@ -6,7 +6,8 @@
 
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.10.520"]]
-  :plugins [[lein-cljsbuild "1.1.7"]]
+  :plugins [[lein-cljsbuild "1.1.7"]
+            [lein-npm "0.6.2"]]
 
   :cljsbuild {:builds [{:id           "dev"
                         :source-paths ["src"]
@@ -14,4 +15,7 @@
                                        :output-dir "resources/public/js"
                                        :main       misfell-todomvc.core
                                        :asset-path "js"}}]}
+  :npm {:dependencies [[todomvc-app-css "^2.0.0"]
+                       [todomvc-common "^1.0.0"]]}
+
   :target-path "target/%s")
