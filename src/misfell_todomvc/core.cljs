@@ -32,7 +32,7 @@
 (defn- todo-view [todo]
   (el :li :class (smap #(if (:done %) "completed" "") todo)
       (el :div :class "view"
-          (el :input :class "toggle" :type "checkbox" :checked (smap :done todo)) ; FIXME
+          (el :input :class "toggle" :type "checkbox" :checked (smap #(or (:done %) nil) todo))
           (el :label (smap :title todo))
           (el :button :class "destroy"))
 
