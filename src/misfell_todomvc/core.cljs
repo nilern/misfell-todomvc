@@ -1,5 +1,5 @@
 (ns misfell-todomvc.core
-  (:require [cats.core :refer [mlet]]
+  (:require [cats.core :refer [mlet return]]
             [cats.labs.promise :as promise]
             [fell.core :refer [send state-runner run-lift]]
             [mistletoe.signal :as signal :refer [smap]]
@@ -21,7 +21,9 @@
 (defn- load-domain-state []
   (mlet [domain-state (send [:domain-state :get])
          todos-str (send [:local-storage/get storage-key])]
-    (send [:domain-state :set (assoc domain-state :todos (deserialize-todos todos-str))])))
+    (if todos-str
+      (send [:domain-state :set (assoc domain-state :todos (deserialize-todos todos-str))])
+      (return nil))))
 
 (defn- update-domain-state [f & args]
   (mlet [domain-state (send [:domain-state :get])

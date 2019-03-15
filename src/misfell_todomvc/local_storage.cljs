@@ -1,11 +1,18 @@
 (ns misfell-todomvc.local-storage
-  (:require [cats.core :refer [return]]
+  (:require [cats.core :refer [return bind]]
             [cats.labs.promise :as promise]
-            [fell.core :refer [lift handle-relay]]))
+            [fell.core :refer [lift handle-relay]]
+            [promesa.core :refer [promise]]))
 
 (def storage-key "todos-misfell")
 
 ;;; FIXME: JS Promises are too eager to side effect and not really monads.
+
+(defn- get-item [k]
+  (promise (fn [resolve _] (resolve (.. js/window -localStorage (getItem k))))))
+
+(defn- set-item [k v]
+  (promise (fn [resolve _] (resolve (.. js/window -localStorage (setItem k v))))))
 
 (defn run-local-storage [freer]
   (handle-relay #(= (namespace (first %)) "local-storage")
@@ -13,7 +20,8 @@
                 (fn [[tag & args] cont]
                   (case tag
                     :local-storage/get (let [[k] args]
-                                         (cont (.. js/window -localStorage (getItem k))))
+                                         (bind (lift (get-item k)) cont))
                     :local-storage/set (let [[k v] args]
-                                         (cont (.. js/window -localStorage (setItem k v))))))
+                                         (bind (lift (set-item k v)) cont))))
                 freer))
+

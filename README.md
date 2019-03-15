@@ -4,7 +4,10 @@ Experimental TodoMVC implementation.
 
 ## Installation
 
-`lein cljsbuild once`
+```sh
+lein npm install
+lein cljsbuild once
+```
 
 ## Usage
 
