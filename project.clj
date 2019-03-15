@@ -7,7 +7,8 @@
   :repositories [["jitpack" "https://jitpack.io"]]          ; HACK to avoid releasing half-baked deps
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.10.520"]
-                 [funcool/cats "2.2.0"]
+                 [funcool/promesa "1.9.0"]
+                 [funcool/cats "2.3.2"]
                  [com.github.nilern/fell "master-SNAPSHOT"]
                  [com.github.nilern/mistletoe "master-SNAPSHOT"]]
   :plugins [[lein-cljsbuild "1.1.7"]
