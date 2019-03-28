@@ -92,12 +92,14 @@
 
 (defn- footer [todos filters]
   (el :footer :class "footer"
+      :style {:display (smap #(if (empty? %) "none" "block") todos)}
       (todos-count todos)
       (filters-view filters)
       (el :button :class "clear-completed" "Clear completed")))
 
 (defn- todos-view [emit todos ui-todos]
   (el :section :class "main"
+      :style {:display (smap #(if (empty? %) "none" "block") todos)}
       (el :input :id "toggle-all" :class "toggle-all" :type "checkbox")
       (el :label :for "toggle-all" "Mark all as complete")
       (el :ul :class "todo-list"
@@ -113,12 +115,7 @@
 ;;;; # Initialization
 
 (defn main []
-  (let [domain-state (signal/source {:todos {0 {:id    0
-                                                :title "Taste JavaScript"
-                                                :done  true}
-                                             1 {:id    1
-                                                :title "Buy a unicorn"
-                                                :done  false}}})
+  (let [domain-state (signal/source {:todos {}})
         ui-state (signal/source {:todos   (into {}
                                                 (map (fn [[id _]] [id {:id      id
                                                                        :editing false}]))
