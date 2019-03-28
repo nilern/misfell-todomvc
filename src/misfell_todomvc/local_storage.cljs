@@ -1,8 +1,9 @@
 (ns misfell-todomvc.local-storage
   (:require [cats.core :refer [return bind]]
             [cats.labs.promise :as promise]
-            [fell.core :refer [lift handle-relay]]
-            [promesa.core :refer [promise]]))
+            [promesa.core :refer [promise]]
+            [fell.core :refer [handle-relay]]
+            [fell.lift :refer [lift]]))
 
 (def storage-key "todos-misfell")
 

@@ -1,7 +1,9 @@
 (ns misfell-todomvc.core
   (:require [cats.core :refer [mlet return]]
             [cats.labs.promise :as promise]
-            [fell.core :refer [send state-runner run-lift]]
+            [fell.core :refer [request-eff]]
+            [fell.state :refer [state-runner]]
+            [fell.lift :refer [run-lift]]
             [mistletoe.signal :as signal :refer [smap]]
             [mistletoe.signal.util :refer [seqsig->sigseq map-key-cached]]
             [mistletoe.dom :refer [el append-child!]]
@@ -19,17 +21,17 @@
         (js->clj (.parse js/JSON todos-str) :keywordize-keys true)))
 
 (defn- load-domain-state []
-  (mlet [domain-state (send [:domain-state :get])
-         todos-str (send [:local-storage/get storage-key])]
+  (mlet [domain-state (request-eff [:domain-state :get])
+         todos-str (request-eff [:local-storage/get storage-key])]
     (if todos-str
-      (send [:domain-state :set (assoc domain-state :todos (deserialize-todos todos-str))])
+      (request-eff [:domain-state :set (assoc domain-state :todos (deserialize-todos todos-str))])
       (return nil))))
 
 (defn- update-domain-state [f & args]
-  (mlet [domain-state (send [:domain-state :get])
+  (mlet [domain-state (request-eff [:domain-state :get])
          :let [domain-state (apply f domain-state args)]
-         _ (send [:local-storage/set storage-key (serialize-todos (:todos domain-state))])]
-    (send [:domain-state :set domain-state])))
+         _ (request-eff [:local-storage/set storage-key (serialize-todos (:todos domain-state))])]
+    (request-eff [:domain-state :set domain-state])))
 
 (defn- handle-event [[tag & args]]
   (case tag
