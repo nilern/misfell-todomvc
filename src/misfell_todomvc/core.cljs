@@ -1,6 +1,7 @@
 (ns misfell-todomvc.core
   (:require [cats.core :refer [mlet return]]
             [cats.labs.promise :as promise]
+            [clojure.string :as str]
             [fell.core :refer [request-eff]]
             [fell.state :refer [state-runner]]
             [fell.lift :refer [run-lift]]
@@ -12,30 +13,33 @@
 
 ;;;; # Event Handling
 
-(defn- serialize-todos [todos]
-  (.stringify js/JSON (clj->js (vals todos))))
+(defn- serialize-domain-state [domain-state]
+  (.stringify js/JSON (clj->js domain-state)))
 
-(defn- deserialize-todos [todos-str]
-  (into {}
-        (map (juxt :id identity))
-        (js->clj (.parse js/JSON todos-str) :keywordize-keys true)))
+(defn- deserialize-domain-state [state-str]
+  (js->clj (.parse js/JSON state-str) :keywordize-keys true))
 
 (defn- load-domain-state []
-  (mlet [domain-state (request-eff [:domain-state :get])
-         todos-str (request-eff [:local-storage/get storage-key])]
-    (if todos-str
-      (request-eff [:domain-state :set (assoc domain-state :todos (deserialize-todos todos-str))])
+  (mlet [state-str (request-eff [:local-storage/get storage-key])]
+    (if state-str
+      (request-eff [:domain-state :set (deserialize-domain-state state-str)])
       (return nil))))
 
 (defn- update-domain-state [f & args]
   (mlet [domain-state (request-eff [:domain-state :get])
          :let [domain-state (apply f domain-state args)]
-         _ (request-eff [:local-storage/set storage-key (serialize-todos (:todos domain-state))])]
+         _ (request-eff [:local-storage/set storage-key (serialize-domain-state domain-state)])]
     (request-eff [:domain-state :set domain-state])))
 
 (defn- handle-event [[tag & args]]
   (case tag
     :init (load-domain-state)
+    :new-todo (let [[title] args]
+                (update-domain-state (fn [{id :id-counter :as domain-state}]
+                                       (println domain-state)
+                                       (-> domain-state
+                                           (update :todos assoc id {:id id, :title title, :done false})
+                                           (update :id-counter inc)))))
     :toggle-done (let [[id] args]
                    (update-domain-state update-in [:todos id :done] not))))
 
@@ -57,10 +61,16 @@
 
 ;;;; # UI
 
-(defn- header []
+(defn- header [emit]
   (el :header :class "header"
       (el :h1 "todos")
-      (el :input :class "new-todo" :placeholder "What needs to be done?" :autofocus true)))
+      (el :input :type "text" :class "new-todo"
+          :placeholder "What needs to be done?" :autofocus true
+          :onkeydown (fn [ev]
+                       (when (= (.-key ev) "Enter")
+                         (let [title (.. ev -target -value trim)]
+                           (when-not (str/blank? title)
+                             (emit [:new-todo title]))))))))
 
 (defn- todo-view-class [{:keys [done editing]}]
   (str (when done "completed ") (when editing "editing")))
@@ -115,7 +125,8 @@
 ;;;; # Initialization
 
 (defn main []
-  (let [domain-state (signal/source {:todos {}})
+  (let [domain-state (signal/source {:id-counter 0
+                                     :todos      {}})
         ui-state (signal/source {:todos   (into {}
                                                 (map (fn [[id _]] [id {:id      id
                                                                        :editing false}]))
@@ -136,6 +147,6 @@
 
     ;; GOTCHA: Have to use append-child! instead of .appendChild or reactivity does not manifest:
     (doto (aget (.getElementsByClassName js/document "todoapp") 0)
-      (append-child! (header))
+      (append-child! (header emit))
       (append-child! (todos-view emit (smap :todos domain-state) (smap :todos ui-state)))
       (append-child! (footer (smap :todos domain-state) (smap :filters ui-state))))))
