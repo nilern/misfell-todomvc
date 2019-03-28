@@ -36,7 +36,6 @@
     :init (load-domain-state)
     :new-todo (let [[title] args]
                 (update-domain-state (fn [{id :id-counter :as domain-state}]
-                                       (println domain-state)
                                        (-> domain-state
                                            (update :todos assoc id {:id id, :title title, :done false})
                                            (update :id-counter inc)))))
