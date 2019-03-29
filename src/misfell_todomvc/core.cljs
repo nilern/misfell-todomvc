@@ -40,7 +40,13 @@
                                            (update :todos assoc id {:id id, :title title, :done false})
                                            (update :id-counter inc)))))
     :toggle-done (let [[id] args]
-                   (update-domain-state update-in [:todos id :done] not))))
+                   (update-domain-state update-in [:todos id :done] not))
+    :toggle-all (let [[done] args]
+                  (update-domain-state (fn [{:keys [todos] :as domain-state}]
+                                         (assoc domain-state :todos (into {}
+                                                                          (map (fn [[id todo]]
+                                                                                 [id (assoc todo :done done)]))
+                                                                          todos)))))))
 
 ;;;; # Effect Handling
 
@@ -109,7 +115,9 @@
 (defn- todos-view [emit todos ui-todos]
   (el :section :class "main"
       :style {:display (smap #(if (empty? %) "none" "block") todos)}
-      (el :input :id "toggle-all" :class "toggle-all" :type "checkbox")
+      (el :input :type "checkbox" :id "toggle-all" :class "toggle-all"
+          :checked (smap (fn [todos] (when (every? (fn [[_ {:keys [done]}]] done) todos) "")) todos)
+          :onclick (fn [ev] (emit [:toggle-all (.. ev -target -checked)])))
       (el :label :for "toggle-all" "Mark all as complete")
       (el :ul :class "todo-list"
           (let [todos-sigsig (smap (fn [todos-val]
