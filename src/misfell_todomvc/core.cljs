@@ -17,7 +17,9 @@
   (.stringify js/JSON (clj->js domain-state)))
 
 (defn- deserialize-domain-state [state-str]
-  (js->clj (.parse js/JSON state-str) :keywordize-keys true))
+  (-> (.parse js/JSON state-str)
+      (js->clj :keywordize-keys true)
+      (update :todos (fn [todos] (into {} (map (fn [[id todo]] [(.parseInt js/Number (name id)) todo])) todos)))))
 
 (defn- load-domain-state []
   (mlet [state-str (request-eff [:local-storage/get storage-key])]
